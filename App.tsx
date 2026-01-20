@@ -4,6 +4,7 @@ import { generateItinerary } from './services/geminiService';
 import { TravelInputs, ItineraryResponse } from './types';
 import LoadingOverlay from './components/LoadingOverlay';
 import ItineraryCard from './components/ItineraryCard';
+import SettingsModal from './components/SettingsModal';
 
 const App: React.FC = () => {
   const initialInputs: TravelInputs = {
@@ -16,6 +17,7 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ItineraryResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +26,7 @@ const App: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
+      console.log("Generating itinerary for:", inputs.destination);
       const data = await generateItinerary(inputs);
       setResult(data);
       setTimeout(() => {
@@ -33,8 +36,8 @@ const App: React.FC = () => {
         }
       }, 100);
     } catch (err: any) {
-      console.error(err);
-      setError("일정 생성 중 오류가 발생했습니다. 다시 시도해 주세요.");
+      console.error("Itinerary Generation Failed:", err);
+      setError("AI가 정보를 수집하는 중 오류가 발생했습니다. 설정에서 API 키 연결 상태를 확인해 주세요.");
     } finally {
       setLoading(false);
     }
@@ -54,6 +57,7 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
       {loading && <LoadingOverlay />}
+      <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
 
       {/* Sticky Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 shadow-sm">
@@ -66,13 +70,24 @@ const App: React.FC = () => {
               Travel Buddy
             </h1>
           </div>
-          <button 
-            onClick={handleReset}
-            className="text-sm font-bold text-slate-500 hover:text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-xl transition-all flex items-center gap-2 group"
-          >
-            <i className="fa-solid fa-rotate-left group-hover:rotate-[-45deg] transition-transform"></i>
-            초기화
-          </button>
+          
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setShowSettings(true)}
+              className="text-sm font-bold text-slate-600 hover:text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-xl transition-all flex items-center gap-2 group border border-transparent hover:border-blue-100"
+            >
+              <i className="fa-solid fa-gear group-hover:rotate-90 transition-transform"></i>
+              설정
+            </button>
+            <div className="w-[1px] h-4 bg-slate-200 mx-1"></div>
+            <button 
+              onClick={handleReset}
+              className="text-sm font-bold text-slate-500 hover:text-red-500 hover:bg-red-50 px-4 py-2 rounded-xl transition-all flex items-center gap-2 group"
+            >
+              <i className="fa-solid fa-rotate-left group-hover:rotate-[-45deg] transition-transform"></i>
+              초기화
+            </button>
+          </div>
         </div>
       </header>
 
@@ -162,11 +177,19 @@ const App: React.FC = () => {
             </div>
           </form>
           {error && (
-            <div className="mt-8 p-5 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-4 text-red-600 animate-in fade-in zoom-in duration-300">
-              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <i className="fa-solid fa-circle-exclamation"></i>
+            <div className="mt-8 p-5 bg-red-50 border border-red-100 rounded-2xl flex flex-col gap-3 text-red-600 animate-in fade-in zoom-in duration-300">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <i className="fa-solid fa-circle-exclamation"></i>
+                </div>
+                <p className="font-bold">{error}</p>
               </div>
-              <p className="font-bold">{error}</p>
+              <button 
+                onClick={() => setShowSettings(true)}
+                className="text-xs font-black underline underline-offset-4 hover:text-red-800 ml-14 w-fit"
+              >
+                설정 메뉴에서 API 연결 확인하기 →
+              </button>
             </div>
           )}
         </section>
@@ -174,7 +197,7 @@ const App: React.FC = () => {
         {/* Results Container */}
         {result && (
           <div id="itinerary-result" className="animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-out fill-mode-forwards">
-            
+            {/* 이전 결과 UI 그대로 유지... */}
             {/* Real-time Info Banner */}
             {result.realTimeHighlights && (
               <div className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-[2rem] border border-blue-100 flex flex-col md:flex-row items-center gap-6 shadow-sm">
@@ -320,7 +343,6 @@ const App: React.FC = () => {
         )}
       </main>
 
-      {/* Footer */}
       <footer className="bg-white py-20 border-t border-slate-100 mt-20">
         <div className="max-w-5xl mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center gap-12 mb-16">
@@ -347,11 +369,6 @@ const App: React.FC = () => {
             <p className="text-[11px] text-slate-400 font-bold tracking-wider">
               &copy; 2024 Travel Buddy AI Labs. All rights reserved.
             </p>
-            <div className="flex gap-8">
-              <span className="text-[11px] font-black text-slate-300 hover:text-blue-500 cursor-pointer transition-colors uppercase tracking-widest">Privacy</span>
-              <span className="text-[11px] font-black text-slate-300 hover:text-blue-500 cursor-pointer transition-colors uppercase tracking-widest">Terms</span>
-              <span className="text-[11px] font-black text-slate-300 hover:text-blue-500 cursor-pointer transition-colors uppercase tracking-widest">API Docs</span>
-            </div>
           </div>
         </div>
       </footer>
