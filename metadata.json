@@ -1,0 +1,5 @@
+{
+  "name": "Travel Buddy - AI 여행 일정 생성기",
+  "description": "사용자의 취향과 목적지에 맞춘 최적의 여행 일정을 생성해주는 지능형 여행 플래너입니다. 시간대별 상세 일정과 현지 팁, 예상 비용까지 한눈에 확인하세요.",
+  "requestFramePermissions": []
+}
